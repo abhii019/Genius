@@ -1,11 +1,11 @@
 // app/api/auth/signup/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import dbConnect from "@/lib/db"; // Adjust path if needed
+// import dbConnect from "@/lib/db"; // Adjust path if needed
 import User from "@/models/User"; // Adjust path if needed
 
 export async function POST(request: Request) {
-  await dbConnect();
+  // await dbConnect();
 
   try {
     const { email, password } = await request.json();
