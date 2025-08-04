@@ -1,41 +1,51 @@
-import { auth } from '@clerk/nextjs';
-import { NextResponse } from 'next/server';
-import { Configuration, OpenAIApi } from 'openai';
+import { auth } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
     const body = await req.json();
-    const { messages } = body;
+    const { messages, authorized } = body;
 
-    if (!userId) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (!authorized) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    if (!configuration.apiKey) {
-      return new NextResponse('OpenAI API Key not configured.', {
+    if (!process.env.GEMINI_API_KEY) {
+      return new NextResponse("Gemini API Key not configured.", {
         status: 500,
       });
     }
 
     if (!messages) {
-      return new NextResponse('Messages are required', { status: 400 });
+      return new NextResponse("Messages are required", { status: 400 });
     }
 
-    const response = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      messages,
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-    return NextResponse.json(response.data.choices[0].message);
-  } catch (error) {
-    console.log('[CONVERSATION_ERROR]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+    // For now, let's use a simpler approach - just send the last message
+    const lastMessage = messages[messages.length - 1].content;
+    
+    const result = await model.generateContent(lastMessage);
+    const response = await result.response;
+    const text = response.text();
+
+    return NextResponse.json({ role: "assistant", content: text });
+  } catch (error: any) {
+    console.log("[CONVERSATION_ERROR]", error);
+    
+    // Check if it's an API key error
+    if (error.message?.includes("API key")) {
+      return new NextResponse("Invalid Gemini API Key. Please check your API key.", { status: 500 });
+    }
+    
+    // Check if it's a model not found error
+    if (error.message?.includes("not found") || error.status === 404) {
+      return new NextResponse("Gemini model not found. Please check your API key and model configuration.", { status: 500 });
+    }
+    
+    return new NextResponse(`Internal Error: ${error.message || "Unknown error"}`, { status: 500 });
   }
 }

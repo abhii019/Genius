@@ -1,33 +1,47 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChatCompletionRequestMessage } from 'openai';
-import axios from 'axios';
-import * as z from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { MessageSquare } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { ChatCompletionRequestMessage } from "openai";
+import axios from "axios";
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { Heading } from '@/components/heading';
-import { formSchema } from './constants';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import Empty from '@/components/empty';
-import Loader from '@/components/loader';
-import { cn } from '@/lib/utils';
-import UserAvatar from '@/components/user-avatar';
-import BotAvatar from '@/components/bot-avatar';
+import { Heading } from "@/components/heading";
+import { formSchema } from "./constants";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Empty from "@/components/empty";
+import Loader from "@/components/loader";
+import { cn } from "@/lib/utils";
+import UserAvatar from "@/components/user-avatar";
+import BotAvatar from "@/components/bot-avatar";
 
 export default function page() {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
 
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const res = await fetch("/api/validate-test-token");
+      if (res.ok) {
+        setAuthorized(true);
+      } else {
+        router.push("/login");
+      }
+    };
+    checkAuth();
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      prompt: '',
+      prompt: "",
     },
   });
 
@@ -37,13 +51,14 @@ export default function page() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const userMessage: ChatCompletionRequestMessage = {
-        role: 'user',
+        role: "user",
         content: values.prompt,
       };
       const newMessages = [...messages, userMessage];
 
-      const response = await axios.post('/api/conversation', {
+      const response = await axios.post("/api/conversation", {
         messages: newMessages,
+        authorized,
       });
       setMessages((current) => [...current, userMessage, response.data]);
 
@@ -124,13 +139,13 @@ export default function page() {
               <div
                 key={message.content}
                 className={cn(
-                  'p-8 w-full flex items-start gap-x-8 rounded-lg',
-                  message.role === 'user'
-                    ? 'bg-white border border-black/10'
-                    : 'bg-muted'
+                  "p-8 w-full flex items-start gap-x-8 rounded-lg",
+                  message.role === "user"
+                    ? "bg-white border border-black/10"
+                    : "bg-muted"
                 )}
               >
-                {message.role === 'user' ? <UserAvatar /> : <BotAvatar />}
+                {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
                 <p className="text-sm">{message.content}</p>
               </div>
             ))}

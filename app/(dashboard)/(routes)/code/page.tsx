@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import * as z from 'zod';
-import axios from 'axios';
-import { Code } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { useRouter } from 'next/navigation';
-import { ChatCompletionRequestMessage } from 'openai';
+import * as z from "zod";
+import axios from "axios";
+import { Code } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { useRouter } from "next/navigation";
+import { ChatCompletionRequestMessage } from "openai";
 
-import BotAvatar from '@/components/bot-avatar';
-import { Heading } from '@/components/heading';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { cn } from '@/lib/utils';
-import Loader from '@/components/loader';
-import UserAvatar from '@/components/user-avatar';
-import Empty from '@/components/empty';
+import BotAvatar from "@/components/bot-avatar";
+import { Heading } from "@/components/heading";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
+import Loader from "@/components/loader";
+import UserAvatar from "@/components/user-avatar";
+import Empty from "@/components/empty";
 
-import { formSchema } from './constants';
+import { formSchema } from "./constants";
 
 const CodePage = () => {
   const router = useRouter();
@@ -29,21 +29,38 @@ const CodePage = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      prompt: '',
+      prompt: "",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
 
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const res = await fetch("/api/validate-test-token");
+      if (res.ok) {
+        setAuthorized(true);
+      } else {
+        router.push("/login");
+      }
+    };
+    checkAuth();
+  }, []);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       const userMessage: ChatCompletionRequestMessage = {
-        role: 'user',
+        role: "user",
         content: values.prompt,
       };
       const newMessages = [...messages, userMessage];
 
-      const response = await axios.post('/api/code', { messages: newMessages });
+      const response = await axios.post("/api/code", {
+        messages: newMessages,
+        authorized,
+      });
       setMessages((current) => [...current, userMessage, response.data]);
 
       form.reset();
@@ -121,13 +138,13 @@ const CodePage = () => {
               <div
                 key={message.content}
                 className={cn(
-                  'p-8 w-full flex items-start gap-x-8 rounded-lg',
-                  message.role === 'user'
-                    ? 'bg-white border border-black/10'
-                    : 'bg-muted'
+                  "p-8 w-full flex items-start gap-x-8 rounded-lg",
+                  message.role === "user"
+                    ? "bg-white border border-black/10"
+                    : "bg-muted"
                 )}
               >
-                {message.role === 'user' ? <UserAvatar /> : <BotAvatar />}
+                {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
                 <ReactMarkdown
                   components={{
                     pre: ({ node, ...props }) => (
@@ -141,7 +158,7 @@ const CodePage = () => {
                   }}
                   className="text-sm overflow-hidden leading-7"
                 >
-                  {message.content || ''}
+                  {message.content || ""}
                 </ReactMarkdown>
                 {/* <p className="text-sm">
                   {message.content || 'No response from the bot.'}

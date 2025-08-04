@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import axios from 'axios';
-import * as z from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Download, ImageIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import axios from "axios";
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Download, ImageIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import {
   Select,
@@ -14,27 +14,41 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Heading } from '@/components/heading';
-import { amountOptions, formSchema, resolutionOptions } from './constants';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import Empty from '@/components/empty';
-import Loader from '@/components/loader';
-import { Card, CardFooter } from '@/components/ui/card';
-import Image from 'next/image';
+} from "@/components/ui/select";
+import { Heading } from "@/components/heading";
+import { amountOptions, formSchema, resolutionOptions } from "./constants";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Empty from "@/components/empty";
+import Loader from "@/components/loader";
+import { Card, CardFooter } from "@/components/ui/card";
+import Image from "next/image";
 
 export default function ImageGenerationPage() {
   const router = useRouter();
   const [images, setImages] = useState<string[]>([]);
 
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const res = await fetch("/api/validate-test-token");
+      if (res.ok) {
+        setAuthorized(true);
+      } else {
+        router.push("/login");
+      }
+    };
+    checkAuth();
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      prompt: '',
-      amount: '1',
-      resolution: '512x512',
+      prompt: "",
+      amount: "1",
+      resolution: "512x512",
     },
   });
 
@@ -45,8 +59,19 @@ export default function ImageGenerationPage() {
     try {
       setImages([]);
 
-      const response = await axios.post('/api/image', values);
+      const response = await axios.post("/api/image", {
+        ...values,
+        authorized,
+      });
 
+      // Handle Gemini response format
+      if (response.data.error) {
+        // Show error message instead of images
+        alert(response.data.error + "\n\n" + response.data.suggestion);
+        return;
+      }
+
+      // Handle regular image URLs (if using a different service)
       const urls: string[] = response.data.map(
         (image: { url: string }) => image.url
       );
@@ -183,7 +208,7 @@ export default function ImageGenerationPage() {
               <CardFooter className="p-2">
                 <Button
                   onClick={() => {
-                    window.open(src, '_blank');
+                    window.open(src, "_blank");
                   }}
                   variant="secondary"
                   className="w-full"

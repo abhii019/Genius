@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { Montserrat } from 'next/font/google';
-import { usePathname } from 'next/navigation';
+import Image from "next/image";
+import Link from "next/link";
+import { Montserrat } from "next/font/google";
+import { usePathname } from "next/navigation";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 import {
   Code,
   ImageIcon,
@@ -14,51 +14,51 @@ import {
   Music,
   Settings,
   VideoIcon,
-} from 'lucide-react';
+} from "lucide-react";
 
-const montserrat = Montserrat({ weight: '600', subsets: ['latin'] });
+const montserrat = Montserrat({ weight: "600", subsets: ["latin"] });
 
 const routes = [
   {
-    label: 'Dashboard',
+    label: "Dashboard",
     icon: LayoutDashboard,
-    href: '/dashboard',
-    color: 'text-sky-500',
+    href: "/dashboard",
+    color: "text-sky-500",
   },
   {
-    label: 'Conversation',
+    label: "Conversation",
     icon: MessageSquare,
-    href: '/conversation',
-    color: 'text-violet-500',
+    href: "/conversation",
+    color: "text-violet-500",
   },
   {
-    label: 'Image Generation',
+    label: "Image Generation",
     icon: ImageIcon,
-    color: 'text-pink-700',
-    href: '/image',
+    color: "text-pink-700",
+    href: "/image",
   },
   {
-    label: 'Video Generation',
+    label: "Video Generation",
     icon: VideoIcon,
-    color: 'text-orange-700',
-    href: '/video',
+    color: "text-orange-700",
+    href: "/video",
   },
   {
-    label: 'Music Generation',
+    label: "Music Generation",
     icon: Music,
-    color: 'text-emerald-500',
-    href: '/music',
+    color: "text-emerald-500",
+    href: "/music",
   },
   {
-    label: 'Code Generation',
+    label: "Code Generation",
     icon: Code,
-    color: 'text-green-700',
-    href: '/code',
+    color: "text-green-700",
+    href: "/code",
   },
   {
-    label: 'Settings',
+    label: "Settings",
     icon: Settings,
-    href: '/settings',
+    href: "/settings",
   },
 ];
 
@@ -71,7 +71,7 @@ export default function Sidebar() {
           <div className="relative w-8 h-8 mr-4">
             <Image fill alt="Logo" src="/logo.png" />
           </div>
-          <h1 className={cn('text-2xl font-bold', montserrat.className)}>
+          <h1 className={cn("text-2xl font-bold", montserrat.className)}>
             Genius
           </h1>
         </Link>
@@ -80,16 +80,16 @@ export default function Sidebar() {
           {routes.map((route) => (
             <Link
               className={cn(
-                'text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition',
+                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
                 route.href === pathname
-                  ? 'text-white bg-white/10'
-                  : 'text-zinc-400'
+                  ? "text-white bg-white/10"
+                  : "text-zinc-400"
               )}
               href={route.href}
               key={route.href}
             >
               <div className="flex items-center flex-1">
-                <route.icon className={cn('h-5 w-5 mr-3', route.color)} />
+                <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
                 {route.label}
               </div>
             </Link>

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChatCompletionRequestMessage } from 'openai';
-import axios from 'axios';
-import * as z from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Music } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { ChatCompletionRequestMessage } from "openai";
+import axios from "axios";
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Music } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { Heading } from '@/components/heading';
-import { formSchema } from './constants';
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import Empty from '@/components/empty';
-import Loader from '@/components/loader';
+import { Heading } from "@/components/heading";
+import { formSchema } from "./constants";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Empty from "@/components/empty";
+import Loader from "@/components/loader";
 
 export default function MusicPage() {
   const router = useRouter();
@@ -24,18 +24,35 @@ export default function MusicPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      prompt: '',
+      prompt: "",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
+
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const res = await fetch("/api/validate-test-token");
+      if (res.ok) {
+        setAuthorized(true);
+      } else {
+        router.push("/login");
+      }
+    };
+    checkAuth();
+  }, []);
   // const isLoading = true;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setMusic(undefined);
 
-      const response = await axios.post('/api/music', values);
+      const response = await axios.post("/api/music", {
+        ...values,
+        authorized,
+      });
 
       setMusic(response.data.audio);
 
